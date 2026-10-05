@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>10以內減法小遊戲</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:"Microsoft JhengHei",system-ui,sans-serif;background:#fff8e8;color:#2b2b2b}
+main{max-width:760px;margin:auto;padding:18px}
+h1{text-align:center;margin:4px 0 8px;font-size:30px}
+.tip{text-align:center;font-size:18px;margin-bottom:14px}
+.card{background:white;border:3px solid #f1d58a;border-radius:22px;padding:18px}
+.top{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;font-weight:700}
+.eq{text-align:center;font-size:42px;font-weight:900;margin:18px 0 8px}
+.instruction{text-align:center;font-size:21px;font-weight:700;min-height:34px}
+.frame{display:grid;grid-template-columns:repeat(5,1fr);gap:9px;max-width:480px;margin:18px auto}
+.cell{aspect-ratio:1;border:3px solid #d8d8d8;border-radius:13px;display:flex;align-items:center;justify-content:center;font-size:38px;background:#fff}
+.cell.empty{background:#fafafa}
+.cell.removed{opacity:.25;text-decoration:line-through;transform:scale(.85)}
+.actions,.answers{display:flex;justify-content:center;gap:12px;flex-wrap:wrap;margin:16px 0}
+button{font:inherit;border:0;border-radius:15px;min-height:54px;padding:11px 22px;font-weight:800;cursor:pointer}
+.take{background:#ffcf58;font-size:20px}
+.answer{background:#e9f3ff;border:3px solid #91bce8;font-size:27px;min-width:95px}
+.secondary{background:#eee}
+.next{background:#a9e3ae}
+button:disabled{opacity:.45;cursor:not-allowed}
+.strategy{background:#f6f6f6;border-radius:15px;padding:13px;text-align:center;font-size:18px}
+.feedback{text-align:center;font-size:22px;font-weight:900;min-height:34px;margin-top:10px}
+@media(max-width:480px){.eq{font-size:36px}.cell{font-size:30px}h1{font-size:25px}}
+</style>
+</head>
+<body>
+<main>
+<h1>🍎 10以內減法小遊戲</h1>
+<div class="tip">看全部 → 拿走 → 數剩下 → 選答案</div>
+<div class="card">
+  <div class="top"><span>第 <b id="q">1</b> 題</span><span>⭐ 答對 <b id="score">0</b> 題</span></div>
+  <div class="eq" id="eq"></div>
+  <div class="instruction" id="instruction">👀 先看看全部有幾個</div>
+  <div class="frame" id="frame"></div>
+  <div class="actions"><button class="take" id="take">👋 拿走</button></div>
+  <div class="strategy">💡 被拿走的不數，只數「剩下的」。</div>
+  <div class="answers" id="answers"></div>
+  <div class="feedback" id="feedback" aria-live="polite"></div>
+  <div class="actions">
+    <button class="secondary" id="hint">💡 提示</button>
+    <button class="next" id="next" disabled>下一題 ➜</button>
+  </div>
+</div>
+</main>
+<script>
+let q=1,score=0,a,b,taken=false,done=false;
+const $=id=>document.getElementById(id);
+function r(n){return Math.floor(Math.random()*n)}
+function newQ(){
+ a=2+r(9); b=1+r(a); taken=false; done=false;
+ $("q").textContent=q;$("score").textContent=score;
+ $("eq").textContent=`${a} − ${b} = ?`;
+ $("take").textContent=`👋 拿走 ${b} 個`;
+ $("take").disabled=false;$("next").disabled=true;
+ $("instruction").textContent="👀 先看看全部有幾個";$("feedback").textContent="";
+ draw();answers();
+}
+function draw(){
+ $("frame").innerHTML="";
+ for(let i=0;i<10;i++){
+  const d=document.createElement("div");d.className="cell";
+  if(i<a){d.textContent="🍎";if(taken&&i>=a-b)d.classList.add("removed")}
+  else d.classList.add("empty");
+  $("frame").appendChild(d);
+ }
+}
+function opts(){
+ const c=a-b,s=new Set([c]);
+ while(s.size<3)s.add(Math.max(0,Math.min(10,c+r(5)-2)));
+ return [...s].sort(()=>Math.random()-.5);
+}
+function answers(){
+ $("answers").innerHTML="";
+ opts().forEach(n=>{
+  const x=document.createElement("button");x.className="answer";x.textContent=n;
+  x.onclick=()=>check(n);$("answers").appendChild(x);
+ });
+}
+$("take").onclick=()=>{
+ if(taken)return;taken=true;draw();$("take").disabled=true;
+ $("instruction").textContent=`👋 拿走 ${b} 個，只數沒有被劃掉的蘋果`;
+};
+function check(n){
+ if(done)return;
+ if(!taken){$("feedback").textContent="💡 先按「拿走」看看！";return}
+ if(n===a-b){
+  done=true;score++;$("score").textContent=score;
+  $("feedback").textContent=`🎉 答對了！剩下 ${a-b} 個`;
+  $("next").disabled=false;
+  document.querySelectorAll(".answer").forEach(x=>x.disabled=true);
+ }else $("feedback").textContent="👀 再數一次沒有被劃掉的蘋果";
+}
+$("hint").onclick=()=>{
+ $("feedback").textContent=taken?"☝️ 被劃掉的不算，從左邊一個一個數剩下的。":`👀 先數 ${a} 個，再按「拿走 ${b} 個」。`;
+};
+$("next").onclick=()=>{q++;newQ()};
+newQ();
+</script>
+</body>
+</html>
